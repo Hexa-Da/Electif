@@ -1,0 +1,18 @@
+# Fichiers macOS
+.DS_Store
+
+# Environnements virtuels
+venv/
+.venv/
+
+# Fichiers Python compilés
+*.pyc
+*__pycache__/
+
+# Cache dans tes dossiers de séance
+seance_*/__pycache__/
+seance_*/Code/__pycache__/
+
+# Fichiers d'éditeur (optionnel, selon ce que tu utilises)
+.vscode/
+.idea/he__/

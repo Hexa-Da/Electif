@@ -1,0 +1,281 @@
+\documentclass[answers]{exam}
+
+\usepackage[margin=2cm]{geometry}
+\usepackage{listings}
+%\usepackage{exercise}
+\usepackage[vertical]{messagepassing}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{tikz}
+\usetikzlibrary{calc, arrows} % LaTeX and plain TeX
+\usepackage{pgfmath} % LaTeX
+\usepackage{todonotes}
+\usepackage{color}
+\usepackage{formal-grammar}
+\shadedsolutions
+
+\usepackage[utf8]{inputenc}
+\newtheorem{question}{Question}
+
+\NewDocumentCommand{\code}{m}{{\texttt{#1}}}
+
+\lstdefinestyle{python}{
+	language={Python},
+	backgroundcolor=\color{black},
+	basicstyle=\color{white},
+	morestring=[b]",
+	stringstyle=\color{blue!60!white},
+	classoffset=0,
+	keywordstyle=\color{green!60!black},
+	classoffset=1,
+	keywordstyle=\color{green!60!black},
+	classoffset=2,
+	keywordstyle=\color{red!60!white},
+	morekeywords={True, False}, % types
+	showtabs,
+	tabsize=4,
+	tab=\rightarrowfill,
+	escapechar=µ
+}
+
+\title{Python pour ingénieur·e·s~: Parsers\\
+	Fichiers pour synthétiseur.}
+\date{}
+\usepackage{bera}% optional: just to have a nice mono-spaced font
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[tikz]{mdframed}
+
+\usepackage[inline]{enumitem}
+\newenvironment{inlineenum}[1][et]{
+	\begin{enumerate*}[label={{\rm (\roman*)}}, before={},
+		itemjoin={{; }}, itemjoin*={{; #1 }},]
+	}{
+	\end{enumerate*}
+}
+
+\NewDocumentEnvironment{remarque}{o}{
+	\par
+	{\bf Remarque \IfValueT{#1}{(#1)} :}
+}{}
+
+\newcommand\Warning{%
+	\makebox[1.4em][c]{%
+		\makebox[0pt][c]{\raisebox{.1em}{!}}%
+		\makebox[0pt][c]{\color{red}\LARGE$\bigtriangleup$}}}%
+
+
+\newmdenv[
+linecolor=black,
+linewidth=2pt,
+roundcorner=5pt,
+outerlinewidth=2pt,
+outerlinecolor=blue
+]{information}
+
+\newmdenv[
+linecolor=black,
+linewidth=2pt,
+roundcorner=5pt,
+outerlinewidth=2pt,
+outerlinecolor=red,
+frametitle={Consigne},
+]{consigne}
+
+\begin{document}
+	\maketitle
+	\section{Présentation générale}
+	L'objectif de cette série d'exercice est de faciliter l'utilisation du synthétiseur que nous avons écrit lors de la séance 3. Pour cela, nous aimerions pouvoir décrire, dans un fichier, la musique à jouer, plutôt que de devoir appeler à la main les fonctions de synthèse. Nous allons donc définir un format de fichier et écrire un parser pour lire de tels fichiers, et appeler les fonctions en fonction du contenu. 
+	
+	\paragraph{Présentation du format de fichier.}
+	Nous aimerions que les fichiers puissent être écrits à la main, nous allons donc utiliser un format textuel, qui contiendra les notes à jouer. Dans un premier temps, nous pouvons penser à un fichier contenant seulement une suite de fréquences à jouer pendant un certain temps. Par exemple, un fichier contenant la chaine de caractères «~\code{440, 5; 262, 3}~» produirait un \emph{la} (440Hz) pendant 5 secondes, puis un \emph{do} (262Hz) pendant 3 secondes.
+	
+	Pour se simplifier la vie, on aimerait pouvoir nommer les notes: plutôt que se souvenir qu'un \emph{do} est à 262Hz, on aimerait pouvoir appeler «~\code{C4}~», en ayant préalablement défini «~\code{C4}~» comme étant 262Hz. Ainsi, notre format de fichier aura une première partie avec des définitions de notes, et une seconde partie où il y aura le morceau à jouer. Ce qui donnerait, par exemple:
+	\begin{verbatim}
+A4 = 440
+C3 = 262
+A4, 5; C3, 3
+	\end{verbatim}
+
+\begin{remarque}
+	On utilise la notation anglo-saxonne pour le nom des notes~: notées de «~\code{A}~» (\emph{la}) à «~\code{G}~» (\emph{sol}), suivi d'un chiffre qui indique l'octave de référence. Par exemple~: «~\code{A4}~» est le \emph{la} standard, à 440Hz; «~\code{B4}~» est le \emph{si} un ton plus haut. Le \emph{la} «~\code{A5}~» est une octave plus haut (donc 880Hz). Le \emph{sol} «~\code{G3}~» est un ton en dessous de «~\code{A4}~».
+\end{remarque}	
+	
+		
+	On veut aussi pouvoir superposer plusieurs notes simultanément. Donc on introduit la notation «~\code{... | ...}~» qui indique que les deux éléments qui précèdent et suivent doivent être joués en même temps. De fait, on va devoir parenthéser les suites de notes pour désambiguïser certaines expressions. Au final, nos fichiers ressemblerons à :
+	\begin{verbatim}
+C3 = 262
+E3 = 330
+G3 = 392
+{
+	C3, 5;
+	{
+		C3, 5;
+		|E3, 5;
+		|G3, 5;
+	}
+}
+	\end{verbatim}
+	En l'occurrence, ce fichier joue un \emph{do} pendant 5 secondes, puis un accord \emph{do}/\emph{mi}/\emph{sol} pendant 5 secondes.
+	
+	
+	\section{Format de fichier}
+	Après ce que nous avons vu plus haut, nous pouvons maintenant écrire formellement la grammaire des fichiers que nous lirons~:
+	\begin{verbatim}
+fichier   := note_def* piste
+note_def  := nom '=' freq
+nom       := majuscule chiffre
+majuscule := 0x41 ... 0x5A             ; 'A' ... 'Z'
+chiffre   := 0x30 ... 0x39             ; '1' ... '9'
+freq      := nombre
+piste     := note | '{' piste* '}' | '{' piste ('|' piste)* '}'
+note      := nom ',' nombre ';'
+nombre    := chiffre*
+	\end{verbatim}
+	
+	
+	\begin{consigne}[frametitle=Parser]
+		Pour nous familiariser avec la grammaire, essayez de faire correspondre les groupes à la chaine ci-dessous~:\\
+		\code{C3 = 262 E3 = 330 G3 = 392 \{ C3, 5; \{ C3, 5; | E3, 5; | G3, 5; \} \}}
+	\end{consigne}
+	
+	\section{Structure de données}
+	\subsection{Structure de données pour les pistes}
+	Avant d'attaquer à écrire le parser, on va réfléchir à \emph{ce qu'on veut obtenir}, comme sortie du parser. On aimerait avoir un objet que l'on puisse \emph{synthétiser}, à l'aide du synthétiseur qu'on a écrit (par exemple à l'aide d'une méthode \code{synthetise}). Par ailleurs, on note que la structure de la piste est récursive~: par exemple, pour synthétiser plusieurs pistes en parallèle, on pourra synthétiser chaque piste, puis les composer à l'aide de la fonction \code{superposer\_signaux} que l'on a écrit dans le synthétiseur.
+	
+	Ainsi, on peut imaginer avoir 3 classes, car une piste peut avoir trois formes~: ou bien une note unique (modélisé par une classe \code{Son}), une séquence de pistes (modélisée par une classe \code{Sequence}), et une superposition de son (modélisée par une classe \code{Superposition}). Les classes \code{Sequence} et \code{Superposition} contiendront une liste de pistes (chacune pouvant être un son individuel, ou (récursivement) une séquence, ou une superposition).
+	
+	Synthétiser les \code{Sequence}s ou les \code{Superposition}s est (techniquement) facile\footnote{L'intuition peut toutefois être difficile à saisir, en raison de la récursion.}. En revanche, il y a une question pour ce qui est des notes de base. Notre classe \code{Son} a accès au nom de la note à jouer et à la durée, mais il faut convertir le nom de la note en sa fréquence, pour pouvoir générer le signal à l'aide des fonctions \code{generer\_signal} ou \code{note} du synthétiseur. Pour cela, il faut retrouver, parmi toutes les notes définies, laquelle correspond. On peut donc simplement convertir l'ensemble des définitions en un dictionnaire des \code{noms} vers les \code{fréquence}s, puis passer ce dictionnaire lors de la synthèse.
+	
+	\begin{consigne}[frametitle=Représentation mémoire]
+		Faites un schéma de la structure de données qui correspond à la chaine de caractère ci-dessous~:\\
+		\code{C3 = 262 E3 = 330 G3 = 392 \{ C3, 5; \{ C3, 5; | E3, 5; | G3, 5; \} \}}
+	\end{consigne}
+	
+	Le squelette des classes \code{Son}, \code{Sequence} et \code{Superposition} sont fournies.
+	
+	\begin{consigne}[frametitle=Implémentation de la fonction de synthèse]
+		Complétez les fonctions \code{synthesize} des trois classes.
+	\end{consigne}
+	\begin{remarque}
+	 	Pour vous entrainer et pour bien comprendre le fonctionnement de ces classes, vous pouvez construire une piste à la main, puis tenter de la synthétiser.
+	\end{remarque}
+	
+	\subsection{Structure de données pour la définition des notes}
+	Il faut aussi réfléchir à la manière de stocker les notes définies. Comme dit plus haut, on aimerait avoir un dictionnaire des noms de notes vers leur fréquence. Ce dictionnaire sera construit à partir d'une liste de $2$-uplets correspondant aux couples définis.
+	
+	\section{Implémentation du Parser}
+	
+	\subsection{Tokenizer}
+	Un tokenizer partiel est fourni, mais il ne tokenise pas les lettres et les chiffres, ni les blancs (espaces, tabulations, saut de lignes, etc.).
+	
+	\begin{consigne}[frametitle=Tokenizer]
+	 	Complétez la spécification du tokenizer afin de lire les lettres (majuscules), les chiffres et les blancs.
+	\end{consigne}
+	
+	\begin{consigne}[frametitle=Tokenization]
+	 	Que renvoie la fonction \code{\_tokenize("A4 = 440 C3 = 262	A4, 5; C3, 3")}~?
+	 	
+	 	\begin{remarque}
+	 		Utilisez le debugger pour explorer l'exécution du programme.
+	 	\end{remarque}
+	\end{consigne}
+	
+	\subsection{Parser}
+	Le parser doit transformer la sortie du tokenizer en une structure de donnée utilisable. Nous allons procéder en deux étapes~: d'abord, reconnaitre les séquences de tokens qui nous intéressent, à l'aide des combinateurs de \code{funcparserlib}. Le résultat de ces combinaison est sous forme de type de base python (tuples, listes, etc.). Dans un second temps, nous transformerons donc ces objets renvoyés en objets qui nous intéressent (des \code{Son}s, des \code{Sequence}s et des \code{Superposition}s).
+	
+	La construction de parser par combinateurs fonctionne en construisant de petits parsers très simples, puis en les combinants jusqu'à obtenir ce qu'on souhaite. Quelques uns de ces petits parsers sont déjà fournis.
+	
+	\paragraph{Observation des parsers fournis.}
+	
+	Observez le parser \code{nom}~: 
+\begin{lstlisting}[style=python]
+nom = tok("majuscule") + tok("chiffre") >> (lambda l: ''.join(l))
+\end{lstlisting}
+	Ceci créé un parser qui va chercher un token "majuscule", puis un token "chiffre". La séquence de ces deux tokens est exprimée à l'aide de la composition \code{+}\footnote{La bibliothèque \code{funcparserlib} redéfini certains opérateurs, par exemple le \code{+}, qui n'est donc pas l'addition, mais bien la composition en séquence.}. L'opérateur \code{+} prend deux parsers (dans notre cas, le parser de majuscule et le parser de chiffre) et renvoie un nouveau parser. Au moment de parser une chaine de caractère, ce nouveau parser renvoie un tuple où le premier élément est le résultat du premier parser, et le second celui du second parser\footnote{Ce qui précède n'est pas tout à fait vrai~: on peut combiner $n$ parser en séquence, et au lieu d'obtenir des $2$-uplets imbriqués, on obtient un seul $n$-uplet.}.
+	
+	La seconde partie de la ligne (le \code{>{}> (...)}) ne nous intéresse pas pour le moment, on verra à quoi il sert un peu plus bas.
+	
+	\begin{consigne}[frametitle=Typage de combinateurs]
+		D'un point de vue typage, un parser est une fonction qui accepte une séquence de tokens, et qui renvoie un objet d'un type donné, et la suite de la séquence non consommée~: \code{p: List(A) $\rightarrow$ B$\times$List(A)}.
+		
+		Écrivez le type du combinateur \code{+}, celui du combinateur \code{many}, celui du combinateur \code{-} ?
+	\end{consigne}
+	
+	\paragraph{Premiers pas vers les combinateurs.}
+	
+	On va maintenant écrire nos premiers parsers.
+	
+	\begin{consigne}[frametitle=Écriture de parsers]
+		Complétez les parsers \code{note\_def} (qui doit accepter une définition de note) et \code{son} (qui doit accepter une note unique).\\
+		Pour le moment, on veut juste accepter les entrées correctes, on ne se préoccupe pas de l'objet renvoyé.
+	\end{consigne}
+	
+	\begin{remarque}
+		Vous pouvez tester votre parser en appelant (par exemple)~: \code{node\_def.parse("...")}
+	\end{remarque}
+	
+	\paragraph{Transformer la sortie d'un parser.}
+	
+	On veut maintenant transformer la sortie des parsers que l'on a écrit. Par exemple, on aimerait construire un objet \code{Son} à partir du résultat du parser \code{son}.
+	
+	Pour cela, on va utiliser un combinateur particulier~: \code{>{}>}. Ce combinateur prend un parser \code{p} qui renvoie un objet de type \code{A} et une fonction \code{f} qui transforme \code{A} en \code{B} (donc une fonction \code{f: A $\rightarrow$ B}), et renvoie un parser qui parser à l'aide de \code{p}, puis applique \code{f} à la sortie, renvoyant finalement un objet de type \code{B}.
+	
+	\begin{consigne}[frametitle=Transformation de parser]
+		Écrivez une fonction \code{vers\_note\_def} qui prend un seul argument. Cet argument est un $2$-uplet, donc le premier élément est un nom de note, et le second un entier (qui est une fréquence). Cette fonction doit renvoyer un $2$-uplet contenant le nom de la note en 1ère position, et la fréquence en 2nde position.
+		
+		Dans le parser \code{note\_def} que vous avez écrit plus haut, ajoutez \code{>{}> note\_def} à la fin de la ligne. Observez au débugger comme le résultat renvoyé par le parser change.
+		
+		\begin{remarque}
+			Assurez vous que le parser ignore le token \code{=}, à l'aide du combinateur \code{-}, ou alors modifiez votre fonction \code{vers\_note\_def} afin d'avoir un $3$-uplet comme argument.
+		\end{remarque}
+	\end{consigne}
+	
+	\begin{information}[frametitle=Fonctions anonymes]
+		Pour les fonctions courtes et qu'on ne réutilise pas, plutôt que de créer une fonction séparée, il est possible de créer des fonctions anonymes. Le format est: 
+\begin{lstlisting}[style=python]
+lambda args: expression
+\end{lstlisting}
+		Par exemple, l'expression suivante créé une fonction anonyme a deux arguments, et renvoie leur somme~:
+\begin{lstlisting}[style=python]
+>>> lambda x, y: x+y
+<function <lambda> at 0x76819dc23240>
+\end{lstlisting}
+		On peut ensuite appeler la fonction comme on appellerait une fonction nommée~:
+\begin{lstlisting}[style=python]
+>>> (lambda x, y: x+y)(2, 3)
+5
+\end{lstlisting}
+		Cette notation est assez pratique pour transformer les sorties de parser, puisqu'on veut souvent juste appeler un constructeur avec les valeurs de retour de chacun des sous-parsers. Si toutefois vous n'êtes pas à l'aise avec la notation, vous pouvez toujours passer par des fonctions classiques.
+	\end{information}
+	
+	\subsection{Parser récursif}
+	Nous allons maintenant nous attaquer le dernier morceau du parser~: la piste à jouer en elle-même. La difficulté, par rapport à ce qui précède, est qu'une piste est composée ou bien d'une note unique, d'une séquence de pistes, ou de pistes en parallèle~: la définition est récursive\footnote{Cette récursivité est très pratique~: par exemple, on peut écrire un accord à l'aide de plusieurs notes en parallèles, qui prend place dans la ligne de main droite d'un piano (donc une séquence de notes), qui est elle-même en parallèle avec la main gauche.}. 
+	
+	Le problème, c'est qu'on ne peut pas écrire directement~: en effet, si on écrit \code{piste = ... piste ...}, le nom \code{piste} à droite du \code{=} n'est pas encore défini (la variable n'existe pas encore). 
+	
+	Pour résoudre ce problème, on va prédéclarer la variable, puis définir le parser dans un second temps~:
+	\begin{lstlisting}[style=python]
+piste = forward_decl()
+piste.define(... comme habituellement ...)
+\end{lstlisting}
+	
+	\begin{consigne}[frametitle=Parser de pistes]
+		Définissez le parser \code{piste}.
+		
+		\begin{remarque}
+			Procédez par étapes. Vous pouvez commencer par juste autoriser les notes individuelles, puis les notes et les séquences de pistes, puis tout.
+			
+			Pensez à convertir la sortie de chaque sous-parser en un objet adéquat~:\\\code{Son}, \code{Sequence}, ou \code{Superposition}.
+		\end{remarque}
+	\end{consigne}
+	
+	\begin{remarque}
+		Il peut arriver, si vous ne faites pas attention, que vous ayez des récursions infinies (typiquement, si on a un parser défini par \code{piste.define(piste)}). Si c'est le cas, assurez-vous de bien \emph{consommer} des tokens à chaque appel récursif (normalement, chaque appel récursif consomme au moins une paire d'accolades).
+	\end{remarque}
+	
+	\begin{consigne}[frametitle=Test final]
+		Vous devriez maintenant pouvoir tester votre parser sur un fichier réel. Vous pouvez décommenter les dernières lignes de votre code source pour synthétiser le morceau écrit dans \code{musique.txt}.
+	\end{consigne}
+\end{document}
+
