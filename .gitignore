@@ -4,6 +4,7 @@
 # Environnements virtuels
 venv/
 .venv/
+seance_8/venv312/
 
 # Fichiers Python compilés
 *.pyc
