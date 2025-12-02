@@ -85,3 +85,36 @@
 - Méthodes de synthèse (synthesize)
 - Concaténation et superposition de pistes audio
 - Traitement de fichiers texte
+
+## Séance 7 / TD7
+
+### Thèmes abordés
+- Théorie des graphes avec NetworkX
+- Analyse de données de transport public (format GTFS)
+- Algorithmes de parcours et optimisation de trajets
+
+### Techniques utilisées
+- Bibliothèque NetworkX pour la manipulation de graphes
+- Lecture de fichiers CSV (données GTFS : stops, trips, stop_times)
+- Calcul de distances géodésiques (geopy.distance)
+- Composantes connexes (nx.connected_components)
+- Degré des nœuds et centralité
+- Plus courts chemins (nx.shortest_path, Dijkstra)
+- Calcul de toutes les distances (nx.all_pairs_dijkstra_path_length)
+- Visualisation de graphes sur carte (plotly, pandas)
+
+## Séance 8 / TD8
+
+### Thèmes abordés
+- Programmation par contraintes (Constraint Programming)
+- Génération automatique d'emplois du temps
+- Modélisation de problèmes d'optimisation combinatoire
+
+### Techniques utilisées
+- Bibliothèque CPMpy pour la résolution de contraintes
+- Variables de décision booléennes (boolvar)
+- Modélisation de contraintes (Model, solve)
+- Tableaux multidimensionnels pour représenter le planning
+- Contraintes sur les créneaux, cours, classes et salles
+- Résolution SAT (satisfiabilité)
+- Affichage formaté de solutions
