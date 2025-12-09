@@ -118,3 +118,24 @@
 - Contraintes sur les créneaux, cours, classes et salles
 - Résolution SAT (satisfiabilité)
 - Affichage formaté de solutions
+
+## Séance 9 / TD9
+
+### Thèmes abordés
+- Programmation réseau avec TCP/IP et asyncio
+- Communication client-serveur asynchrone
+- Interfaces utilisateur textuelles avec Textual
+- Protocoles de communication (JSON sur TCP)
+- Sécurité des applications réseau
+
+### Techniques utilisées
+- Connexions TCP asynchrones (asyncio.open_connection)
+- StreamReader et StreamWriter pour la communication bidirectionnelle
+- Bibliothèque Textual pour les interfaces TUI (Text User Interface)
+- Format JSON pour la sérialisation des messages
+- Gestion asynchrone des événements (await, async/await)
+- Parsing JSON (json.loads, json.dumps)
+- Encodage/décodage UTF-8 (encode, decode)
+- Gestion des buffers réseau (drain)
+- Boucles infinies asynchrones pour la réception continue
+- Identification des vulnérabilités de sécurité (chiffrement, rate limiting, validation)
