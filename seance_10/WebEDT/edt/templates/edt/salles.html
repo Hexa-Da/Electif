@@ -1,0 +1,17 @@
+{% extends 'edt/base.html' %}
+
+{% block content %}
+<ul>
+    {% for salle in salles %}
+        <li>Salle {{ salle.numero}}</li>
+    {% endfor %}
+</ul>
+
+<form action="{% url 'edt:ajout_salle' %}" method="post">
+{% csrf_token %}
+  <label>Numéro de salle :
+    <input name="salle_numero" autocomplete="numero" />
+  </label>
+  <button>Ajouter</button>
+</form>
+{% endblock %}

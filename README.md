@@ -139,3 +139,28 @@
 - Gestion des buffers réseau (drain)
 - Boucles infinies asynchrones pour la réception continue
 - Identification des vulnérabilités de sécurité (chiffrement, rate limiting, validation)
+
+## Séance 10 / TD10
+
+### Thèmes abordés
+- Développement d'applications web avec Django
+- Intégration d'un solveur de contraintes dans une application web
+- Gestion de formulaires HTML et requêtes POST
+- Modèles de données et ORM Django
+- Templates Django et langage de template
+- Génération automatique d'emplois du temps via interface web
+
+### Techniques utilisées
+- Framework web Django (modèles, vues, templates, URLs)
+- Modèles de données Django (models.Model, CharField, IntegerField)
+- ORM Django (objects.all(), order_by(), save())
+- Gestion de requêtes HTTP (request.POST, request.GET)
+- Templates Django avec boucles ({% for %}) et variables ({{ }})
+- Formulaires HTML avec méthode POST et tokens CSRF
+- Intégration de solveur externe (edt_solver avec CPMpy)
+- Parsing de données POST (request.POST.get())
+- Gestion d'erreurs (IntegrityError, try/except)
+- Mapping de données entre base de données et solveur
+- Conversion de QuerySets en listes pour garantir l'ordre
+- Construction de contextes pour les templates
+- Affichage de solutions dans des tableaux HTML

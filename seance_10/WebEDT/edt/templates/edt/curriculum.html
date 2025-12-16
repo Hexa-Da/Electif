@@ -1,0 +1,28 @@
+{% extends 'edt/base.html' %}
+
+{% block content %}
+<form action="{% url 'edt:calculer_edt' %}" method="post"> 
+{% csrf_token %}
+<table>
+	<tr>
+		<td></td>
+		{% for cours in cours %}
+		<td>{{ cours.intitule_cours }}</td>
+		{% endfor %}
+	</tr>
+	{% for classe in classes %}
+	<tr>
+		<td>
+			Classe n° {{ classe.classe }}
+		</td>
+		{% for cours in cours %}
+		<td>
+			<input type="checkbox" id="{{ classe.classe }}-{{ cours.intitule_cours }}" name="{{ classe.classe }}-{{ cours.intitule_cours }}"/>
+		</td>
+		{% endfor %}
+	</tr>
+	{% endfor %}
+</table>
+  <button>Calculer l'emploi du temps</button>
+</form>
+{% endblock %}

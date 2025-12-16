@@ -1,0 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "EdT_Solver"
+version = "0.0.1"
+authors = [
+  { name="Martin Vassor", email="martin.vassor@univ-lorraine.fr" },
+]
+description = ""
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = ""
+Issues = ""
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/edt_solver"]

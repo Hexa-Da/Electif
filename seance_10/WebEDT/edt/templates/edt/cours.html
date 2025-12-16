@@ -1,0 +1,21 @@
+{% extends 'edt/base.html' %}
+
+{% block content %}
+<ul>
+    {% for cours in cours %}
+        <li>{{ cours.intitule_cours }} - {{ cours.quota_horaire }} heures</li>
+    {% endfor %}
+</ul>
+
+<form action="{% url 'edt:ajout_cours' %}" method="post">
+{% csrf_token %}
+  <label>Intitulé du cours :
+    <input name="intitule_cours" autocomplete="off" />
+  </label>
+  <label>Quota horaire :
+    <input name="quota_heures" type="number" min="0" />
+  </label>
+  <button>Ajouter</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'edt/base.html' %}
+
+{% block content %}
+<ul>
+	<li><a href="{% url 'edt:salles' %}">Voir les salles</a></li>
+	<li><a href="{% url 'edt:cours' %}">Voir les cours</a></li>
+	<li><a href="{% url 'edt:classes' %}">Voir les classes</a></li>
+	<li><a href="{% url 'edt:curriculum' %}">Créer un emploi du temps</a></li>
+</ul>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'edt/base.html' %}
+
+{% block content %}
+<ul>
+    {% for classe in classes %}
+        <li>Classe n°{{ classe.classe}}</li>
+    {% endfor %}
+</ul>
+
+<form action="{% url 'edt:ajout_classe' %}" method="post">
+{% csrf_token %}
+  <label>Numéro de la classe :
+    <input name="classe_id" autocomplete="id" />
+  </label>
+  <button>Ajouter</button>
+</form>
+{% endblock %}

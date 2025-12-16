@@ -1,0 +1,53 @@
+{% extends 'edt/base.html' %}
+
+{% block content %}
+<style>
+table, th, td {
+  border: 1px solid black;
+  border-radius: 10px;
+}
+</style>
+<table>
+	<tr>
+		<th></th>
+		<th>9h-10h</th>
+		<th>10h-11h</th>
+		<th>11h-12h</th>
+		<th>13h-14h</th>
+		<th>14h-15h</th>
+		<th>15h-16h</th>
+		<th>16h-17h</th>
+	</tr>
+	{% for jour_idx, jour in solution.items %}
+	<tr>
+		<th>
+		{% if jour_idx == 0 %}
+		Lundi
+		{% endif %}
+		{% if jour_idx == 1 %}
+		Mardi
+		{% endif %}
+		{% if jour_idx == 2 %}
+		Mercredi
+		{% endif %}
+		{% if jour_idx == 3 %}
+		Jeudi
+		{% endif %}
+		{% if jour_idx == 4 %}
+		Vendredi
+		{% endif %}
+		</th>
+
+		{% for _, creneau in jour.items %}
+		<td>
+			{% for salle_idx, salle in creneau.items %}
+			{% if salle is not None %}
+			Classe {{ salle.1 }}: {{ salle.0 }} (salle {{ salle.2 }})</br>
+			{% endif %}
+			{% endfor %}
+		</td>
+		{% endfor %}
+	</tr>
+	{% endfor %}
+</table>
+{% endblock %}

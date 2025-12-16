@@ -5,6 +5,7 @@
 venv/
 .venv/
 seance_8/venv312/
+seance_10/venv312/
 
 # Fichiers Python compilés
 *.pyc

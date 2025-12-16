@@ -1,0 +1,25 @@
+.
++-- EdT_Solver/		# Le package du Solver
++-- WebEDT
+	+-- db.sqlite3	# Le fichier de base de données
+	+-- edt
+	|	+-- admin.py
+	|	+-- apps.py
+	|	+-- __init__.py
+	|	+-- migrations/	
+	|	+-- models.py	# Le fichier contenant le modèle de la base de données
+	|	+-- __pycache__/
+	|	+-- templates	# Les templates de pages de réponses
+	|	|	+-- edt
+	|	|		+-- base.html
+	|	|		+-- classe.html
+	|	|		+-- cours.html
+	|	|		+-- curriculum.html
+	|	|		+-- edt.html
+	|	|		+-- index.html
+	|	|		+-- salles.html
+	|	+-- tests.py
+	|	+-- urls.py		# Le fichier indiquant les fonctions à appeler
+	|	+-- views.py	# Le fichier contenant les fonctions à appeler
+	+-- manage.py	# Le programme python à lancer
+	+-- WebEDT/		# La configuration globale du site
