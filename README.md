@@ -164,3 +164,26 @@
 - Conversion de QuerySets en listes pour garantir l'ordre
 - Construction de contextes pour les templates
 - Affichage de solutions dans des tableaux HTML
+
+## Séance 11 / TD11
+
+### Thèmes abordés
+- Programmation concurrente et asynchrone avec asyncio
+- Simulation d'un ordinateur multi-unités (CPU, Mémoire, Carte réseau, etc.)
+- Modélisation de tâches avec dépendances et continuations
+- Exécution concurrente de plusieurs unités d'exécution
+- Gestion dynamique de files d'attente de tâches
+- Visualisation temporelle de l'exécution des tâches
+
+### Techniques utilisées
+- Programmation asynchrone Python (async/await, asyncio)
+- Création de tâches concurrentes (asyncio.create_task)
+- Synchronisation de tâches (asyncio.gather)
+- Attente asynchrone (asyncio.sleep)
+- Gestion de files d'attente dynamiques (listes avec append/pop)
+- Compteur de tâches pour la gestion de fin d'exécution
+- Classes Python avec méthodes asynchrones
+- Visualisation avec matplotlib (barres horizontales, diagramme de Gantt)
+- Logging temporel avec time.time_ns()
+- Modélisation orientée objet (Tache, UniteExecution, Ordinateur)
+- Gestion des continuations de tâches (graphe de dépendances en arbre)
